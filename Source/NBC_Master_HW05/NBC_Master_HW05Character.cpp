@@ -10,6 +10,10 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Component/HealthComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Blueprint/UserWidget.h"
+#include "UI/HealthWidget.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -52,6 +56,9 @@ ANBC_Master_HW05Character::ANBC_Master_HW05Character()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+	//체력 컴포넌트 부착
+	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -92,6 +99,22 @@ void ANBC_Master_HW05Character::SetupPlayerInputComponent(UInputComponent* Playe
 	}
 }
 
+void ANBC_Master_HW05Character::OnDamaged(float NewHealth, float MaxHealth, float HealthChange)
+{
+	UE_LOG(LogTemp, Warning, TEXT("%f / %f"), NewHealth, MaxHealth);
+	if (IsValid(HealthWidgetInstance))
+	{
+		HealthWidgetInstance->SetPercent(NewHealth, MaxHealth);
+	}
+}
+
+void ANBC_Master_HW05Character::OnDead(AController* InstigatorController)
+{
+	UKismetSystemLibrary::PrintString(this,TEXT("플레이어가 사망했습니다"),true, true, FLinearColor::Red, 5.f);
+
+	Destroy();
+}
+
 void ANBC_Master_HW05Character::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
@@ -127,3 +150,24 @@ void ANBC_Master_HW05Character::Look(const FInputActionValue& Value)
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
 }
+
+void ANBC_Master_HW05Character::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (IsValid(HealthComponent))
+	{
+		HealthComponent->OnHealthDamaged.AddDynamic(this, &ANBC_Master_HW05Character::OnDamaged);
+		HealthComponent->OnHealthDead.AddDynamic(this, &ANBC_Master_HW05Character::OnDead);
+	}
+
+	if (IsValid(HealthWidgetClass))
+	{
+		HealthWidgetInstance = CreateWidget<UHealthWidget>(GetWorld(), HealthWidgetClass);
+		if (IsValid(HealthWidgetInstance))
+		{
+			HealthWidgetInstance->AddToViewport();
+		}
+	}
+}
+

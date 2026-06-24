@@ -11,6 +11,8 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
+class UHealthComponent;
+class UHealthWidget;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -56,7 +58,7 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 			
-
+	virtual void BeginPlay() override;
 protected:
 
 	virtual void NotifyControllerChanged() override;
@@ -68,5 +70,33 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+#pragma region HealtComponent
+
+public:
+
+	//생성한 액터컴포넌트를 받을 클래스
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
+	TObjectPtr<class UHealthComponent> HealthComponent;
+
+	//데미지 받을때 호출될 함수
+	UFUNCTION()
+	void OnDamaged(float NewHealth, float MaxHealth, float HealthChange);
+
+	//죽었을때 호출될 함수
+	UFUNCTION()
+	void OnDead(AController* InstigatorController);
+
+#pragma endregion
+
+#pragma region Widget
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UHealthWidget> HealthWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<UHealthWidget> HealthWidgetInstance;
+
+#pragma endregion
 };
 
