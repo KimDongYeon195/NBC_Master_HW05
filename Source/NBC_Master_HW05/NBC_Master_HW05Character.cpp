@@ -59,6 +59,9 @@ ANBC_Master_HW05Character::ANBC_Master_HW05Character()
 
 	//체력 컴포넌트 부착
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+
+	//최초 Dead 처리는 false
+	bIsDead = false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -101,7 +104,7 @@ void ANBC_Master_HW05Character::SetupPlayerInputComponent(UInputComponent* Playe
 
 void ANBC_Master_HW05Character::OnDamaged(float NewHealth, float MaxHealth, float HealthChange)
 {
-	UE_LOG(LogTemp, Warning, TEXT("%f / %f"), NewHealth, MaxHealth);
+	UE_LOG(LogTemp, Warning, TEXT("현재체력 %f / 최대체력 %f"), NewHealth, MaxHealth);
 	if (IsValid(HealthWidgetInstance))
 	{
 		HealthWidgetInstance->SetPercent(NewHealth, MaxHealth);
@@ -110,9 +113,32 @@ void ANBC_Master_HW05Character::OnDamaged(float NewHealth, float MaxHealth, floa
 
 void ANBC_Master_HW05Character::OnDead(AController* InstigatorController)
 {
+	bIsDead = true;
+
 	UKismetSystemLibrary::PrintString(this,TEXT("플레이어가 사망했습니다"),true, true, FLinearColor::Red, 5.f);
 
-	Destroy();
+	//캐릭터 이동 불가 처리
+	GetCharacterMovement()->DisableMovement();
+
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (IsValid(PlayerController))
+	{
+		//입력처리 불가능
+		DisableInput(PlayerController);
+	}
+
+	//충돌처리
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	UAnimInstance* AI = GetMesh()->GetAnimInstance();
+	if (IsValid(DeathMontage) && IsValid(AI) && bIsDead)
+	{
+		AI->Montage_Play(DeathMontage);
+
+		SetLifeSpan(0.3f);
+	}
 }
 
 void ANBC_Master_HW05Character::Move(const FInputActionValue& Value)

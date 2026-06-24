@@ -13,6 +13,7 @@ class UInputMappingContext;
 class UInputAction;
 class UHealthComponent;
 class UHealthWidget;
+class UAnimMontage;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -96,6 +97,16 @@ public:
 
 	UPROPERTY()
 	TObjectPtr<UHealthWidget> HealthWidgetInstance;
+
+#pragma endregion
+
+#pragma region Montage
+
+	UPROPERTY()
+	uint8 bIsDead : 1;
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	TObjectPtr<UAnimMontage> DeathMontage;
 
 #pragma endregion
 };
