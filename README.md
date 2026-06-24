@@ -38,26 +38,13 @@
 
 ### 실행 흐름
 
-ApplyDamage 호출
-↓
-OnTakeAnyDamage 발동
-↓
-HealthComponent::DamageTake() 실행
-├── CurrentHealth -= FinalDamage
-├── OnHealthDamaged.Broadcast()
-│ ↓
-│ Character::OnDamaged()
-│ ↓
-│ HealthWidget::SetPercent()
-│ ├── HPBar 퍼센트 갱신
-│ ├── CurrentHPText 갱신
-│ └── MaxHPText 갱신
-│
-└── HP <= 0 → OnHealthDead.Broadcast()
-↓
-Character::OnDead()
-├── 이동 비활성화
-├── 입력 비활성화
-├── 래그돌 처리
-├── 사망 몽타주 재생
-└── 액터 제거
+- ApplyDamage 호출
+- OnTakeAnyDamage 발동
+- HealthComponent::DamageTake() 실행
+    - 데미지 로직 수행
+    - UI 업데이트
+    - HP <= 0 -> OnHealthDead.Broadcast()
+- Character::OnDead() 실행
+    - 이동, 입력 비활성화
+    - 사망몽타주 재생
+    - 캐릭터 제거
